@@ -18,15 +18,9 @@
     (require 'qrhl-input-25)
   (require 'qrhl-input))
 
-
-;;;###autoload
-(defgroup qrhl nil "qRHL prover settings")
-
-;;;###autoload
 (defcustom qrhl-input-method "qrhl" "Input method to use when editing qRHL proof scripts"
   :type '(string) :group 'qrhl)
 
-;;;###autoload
 (defcustom qrhl-prog-name "qrhl" "Name/path of the qrhl-prover command"
   :type '(string) :group 'qrhl)
 

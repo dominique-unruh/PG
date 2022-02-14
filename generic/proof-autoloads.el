@@ -351,13 +351,6 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;;### (autoloads nil "../qrhl/qrhl" "../qrhl/qrhl.el" (0 0 0 0))
 ;;; Generated autoloads from ../qrhl/qrhl.el
 
-(let ((loads (get 'qrhl 'custom-loads))) (if (member '"../qrhl/qrhl" loads) nil (put 'qrhl 'custom-loads (cons '"../qrhl/qrhl" loads))))
-
-(defvar qrhl-input-method "qrhl" "\
-Input method to use when editing qRHL proof scripts")
-
-(custom-autoload 'qrhl-input-method "../qrhl/qrhl" t)
-
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "../qrhl/qrhl" '("qrhl-")))
 
 ;;;***
@@ -1204,8 +1197,8 @@ Return a unicode encoded version presentation of STR.
 
 ;;;***
 
-;;;### (autoloads nil nil ("../qrhl/qrhl-input.el" "proof.el") (0
-;;;;;;  0 0 0))
+;;;### (autoloads nil nil ("../qrhl/qrhl-input-25.el" "../qrhl/qrhl-input.el"
+;;;;;;  "proof.el") (0 0 0 0))
 
 ;;;***
 
