@@ -86,7 +86,7 @@
   ; Very simple configuration of keywords: highlights all occurrences, even if they are not actually keywords (e.g., when they are part of a term)
   (append  qrhl-font-lock-subsuperscript
 	   (mapcar (lambda (keyword) (concat "^\\s *\\b" keyword "\\b"))
-		   '("debug:" "isabelle" "quantum\\s +var" "classical\\s +var" "ambient\\s +var"
+		   '("isabelle_cmd" "debug:" "isabelle" "quantum\\s +var" "classical\\s +var" "ambient\\s +var"
 		     "program" "adversary" "qrhl" "lemma" "include" "qed" "cheat" "print"))
 
 	   (mapcar (lambda (tactic) `(,(concat "^\\s *\\b" tactic "\\b") . 'font-lock-function-name-face))
