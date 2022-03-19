@@ -411,7 +411,7 @@
  ("\\heartsuit" ?♥)
  ("\\hookleftarrow" ?↩)
  ("\\hookrightarrow" ?↪)
- ("\\iff" ?⇔)
+ ;("\\iff" ?⇔) ;; Defined below now
  ("\\imath" ?ı)
  ("\\in" ?∈)
  ("\\infty" ?∞)
@@ -772,6 +772,8 @@
  ("=_q" ["=⇩𝔮"])
  ("\\fun" ["⇒"])
  ("\\fun_CL" ["⇒⇩C⇩L"])
+ ("\\implies" ?⟶)
+ ("\\iff" ?⟷)
  )
 
 (provide 'qrhl-input)
