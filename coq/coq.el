@@ -2703,12 +2703,11 @@ insertion point for the \"using\" annotation. ")
 
 ;; span is typically the whole theorem statement+proof span built after a save
 ;; command
-(defun coq-highlight-span-dependencies (span _suggested)
-  (goto-char (span-start span))
+(defun coq-highlight-span-dependencies (start end _suggested)
+  (goto-char start)
   ; Search for the "Proof" command and build a hilighted span on it
-  (let* ((endpos (re-search-forward coq-proof-using-regexp))
-         (proof-pos (match-beginning 0))
-         (newspan (span-make proof-pos endpos)))
+  (let* ((proof-pos (match-beginning 0))
+         (newspan (span-make start end)))
     (span-set-property newspan 'face 'proof-warning-face)
     (span-set-property newspan 'help-echo "Right click to insert \"proof using\"")
     (span-set-property newspan 'proofusing t)))
@@ -2727,6 +2726,28 @@ insertion point for the \"using\" annotation. ")
     (coq-insert-proof-using-suggestion span t)
     (span-delete specialspan)))
 
+(defun coq-find-Proof-command (start end)
+  "look for a \"Proof\" command in span SPAN.
+
+Return nil if not found. Set point to the end of \"Proof\"
+otherwise and return position."
+  (goto-char start)
+  (let ((res t) found)
+    (while (and res (null found))
+      (setq res (let ((case-fold-search nil))
+                  (re-search-forward coq-proof-using-regexp end t)))
+      (when res
+        (let ((beg-proof (match-beginning 0))
+              (ins-point (match-beginning 1))
+              (end-cmd (match-end 1)))
+          (if (and res
+                   (save-excursion ;; one more check that it is a Proof command
+                     (goto-char beg-proof)
+                     (equal (point) (coq-find-real-start))))
+              (setq found (list beg-proof ins-point end-cmd))
+            (goto-char end-cmd)))))
+    found))
+
 ;; TODO: have 'ignoe option to completely ignore (not highlight)
 ;; and have 'never renamed into 'highlight
 (defun coq-insert-proof-using-suggestion (span &optional force)
@@ -2736,17 +2757,17 @@ built from the list of strings in SUGGESTED.
 SPAN is the span of the whole theorem (statement + proof)."
   (with-current-buffer proof-script-buffer
     (save-excursion
-      (goto-char (span-start span))
-      (let* ((endpos (re-search-forward coq-proof-using-regexp (span-end span) t)))
-        (when endpos
-          (let* ((suggested (span-property span 'dependencies))
-                 (proof-pos (match-beginning 0))
-                 (insert-point (match-beginning 1))
-                 (previous-string (match-string 1))
+      (let ((lproof-info (coq-find-Proof-command (span-start span) (span-end span))))
+        (when lproof-info
+          (let* ((proof-pos (car lproof-info)) ;(proof-pos (match-beginning 0))
+                 (insert-point (cadr lproof-info)) ;(insert-point (match-beginning 1))
+                 (proof-end (cl-caddr lproof-info))
+                 (previous-string (buffer-substring insert-point proof-end))
                  (previous-content (split-string previous-string))
+                 (suggested (span-property span 'dependencies))
                  (string-suggested (mapconcat #'identity suggested " "))
                  (string-suggested (coq-hack-proofusing-suggestion string-suggested))
-                 ;; disabled for now it never happens because Coq would suggest anything?
+                 ;; disabled for now it never happens because Coq wouldn't suggest anything
                  (same (and nil previous-content
                             (not (cl-set-exclusive-or previous-content suggested
                                                       :test 'string-equal))))
@@ -2759,7 +2780,7 @@ SPAN is the span of the whole theorem (statement + proof)."
               (if (or force (equal coq-accept-proof-using-suggestion 'always) usersayyes)
                   (coq-insert-proof-using proof-pos previous-content insert-point string-suggested)
                 (when (member coq-accept-proof-using-suggestion '(highlight ask))
-                  (coq-highlight-span-dependencies span string-suggested)
+                  (coq-highlight-span-dependencies proof-pos proof-end string-suggested)
                   (message "\"Proof using\" not set. M-x coq-insert-suggested-dependency or right click to add it. See also `coq-accept-proof-using-suggestion'."))))))))))
 
 (defvar coq-dependencies-system-specific
@@ -3401,15 +3422,55 @@ priority to the former."
 
 (put 'coq-terminator-insert 'delete-selection t)
 
-;;;;;;;;;;;;;;
 
-;; This was done in coq-compile-common, but it is actually a good idea even
-;; when "compile when require" is off. When switching scripting buffer, let us
-;; restart the coq shell process, so that it applies local coqtop options.
-(add-hook 'proof-deactivate-scripting-hook
-          #'coq-switch-buffer-kill-proof-shell ;; this function is in coq-compile-common
-          t)
+;;;;;;;;;;;;;; kill coq background process on different occasions ;;;;;;;;;;;;;;
 
+;; This originates from background compilation, but it is actually a good idea
+;; even when "compile when require" is off. When switching scripting buffer,
+;; let us restart the coq shell process, so that it applies local coqtop
+;; options.
+
+(defun coq-kill-proof-shell ()
+  "Kill the proof shell without asking the user.
+This function is for `proof-deactivate-scripting-hook'.  It kills
+the proof shell without asking the user for
+confirmation (assuming she agreed already on switching the active
+scripting buffer).  This is needed to ensure the load path is
+correct in the new scripting buffer."
+  (unless proof-shell-exit-in-progress
+    (proof-shell-exit t)))
+
+(add-hook 'proof-deactivate-scripting-hook #'coq-kill-proof-shell t)
+
+(defcustom coq-kill-coq-on-opam-switch t
+  "If t kill coq when the opam switch changes (requires `opam-switch-mode').
+When `opam-switch-mode' is loaded and the user changes the opam switch
+through `opam-switch-mode' then this option controls whether the coq
+background process (the proof shell) is killed such that the next
+assert command starts a new proof shell, probably using a
+different coq version from a different opam switch.
+
+See https://github.com/ProofGeneral/opam-switch-mode for `opam-switch-mode'"
+  :type 'boolean
+  :group 'coq)
+
+
+(defun coq-kill-proof-shell-on-opam-switch ()
+  "Kill proof shell when the opam switch changes (requires `opam-switch-mode').
+This function is for the `opam-switch-mode' hook
+`opam-switch-change-opam-switch-hook', which runs when the user
+changes the opam switch through `opam-switch-mode'. If
+`coq-kill-coq-on-opam-switch' is t, then the proof shell is
+killed such that the next assert starts a new proof shell, using
+coq from the new opam switch."
+  (when (and coq-kill-coq-on-opam-switch proof-script-buffer)
+    (coq-kill-proof-shell)))
+
+
+(add-hook 'opam-switch-change-opam-switch-hook
+          #'coq-kill-proof-shell-on-opam-switch t)
+
+;;;;;;;;;;;;;;;
 
 ;; overwriting the default behavior, this is an experiment, *frames* will be
 ;; deleted only if only displaying associated buffers. If this is OK the
