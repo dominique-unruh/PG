@@ -91,11 +91,11 @@ Returns t if this worked."
     (append qrhl-font-lock-subsuperscript
 	    (mapcar (lambda (keyword) `(,(mk-regexp keyword) . (1 'font-lock-keyword-face)))
 		    '("isabelle_cmd" "debug:" "isabelle" "quantum\\s +var" "classical\\s +var" "ambient\\s +var"
-		      "program" "adversary" "qrhl" "lemma" "include" "qed" "cheat" "print"))
+		      "program" "adversary" "qrhl" "lemma" "include" "qed" "cheat" "print\\s +goal" "print"))
 
 	    (mapcar (lambda (tactic) `(,(mk-regexp tactic) . (1 'font-lock-function-name-face)))
 		    '("admit" "wp" "sp" "swap" "simp" "rule" "clear" "skip" "inline" "seq" "conseq\\s +pre"
-		      "conseq\\s +post" "conseq\\s +qrhl" "equal" "rnd"
+		      "conseq\\s +post" "conseq\\s +qrhl" "equal" "rnd" "rewrite"
 		      "byqrhl" "casesplit" "case" "fix" "squash" "frame" "measure" "o2h" "semiclassical"
 		      "sym" "local\\s +remove" "local\\s +up" "rename" "if" "isa"
 		      ))
