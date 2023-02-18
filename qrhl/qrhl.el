@@ -141,6 +141,7 @@ Called before sending CMD to the prover."
   proof-response-font-lock-keywords qrhl-font-lock-keywords
   proof-shell-unicode t
   proof-script-preprocess #'qrhl-proof-script-preprocess
+  proof-assistant-home-page "https://dominique-unruh.github.io/qrhl-tool/"
   )
 
 ; buttoning functions follow https://superuser.com/a/331896/748969
@@ -222,6 +223,18 @@ Called before sending CMD to the prover."
     ;; Indent relative to previous-indent by rel-indent and previous-offset
     (indent-line-to (max (+ previous-indent rel-indent previous-offset) 0))))
 
+
+(defun qrhl-uppercase-mode ()
+  "Show proof goal in upper case (silly test)"
+  (interactive)
+  (proof-shell-invisible-command "silly."))
+  
+
+(setq-default qrhl-menu-entries
+  '(
+    ["Uppercase mode" qrhl-uppercase-mode
+     :help     "Activate uppercase mode (silly test)"]
+    ))
 
 (add-hook 'qrhl-mode-hook
 	  (lambda ()
