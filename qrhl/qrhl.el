@@ -224,16 +224,16 @@ Called before sending CMD to the prover."
     (indent-line-to (max (+ previous-indent rel-indent previous-offset) 0))))
 
 
-(defun qrhl-uppercase-mode ()
-  "Show proof goal in upper case (silly test)"
+(defun qrhl-show-formula-viewer ()
+  "Show formula viewer (external window)"
   (interactive)
-  (proof-shell-invisible-command "silly."))
+  (proof-shell-invisible-command "formula_viewer."))
   
 
 (setq-default qrhl-menu-entries
   '(
-    ["Uppercase mode" qrhl-uppercase-mode
-     :help     "Activate uppercase mode (silly test)"]
+    ["Formula viewer" qrhl-show-formula-viewer
+     :help     "Show formula viewer (external window)"]
     ))
 
 (add-hook 'qrhl-mode-hook
